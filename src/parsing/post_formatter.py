@@ -393,7 +393,7 @@ class PostFormatter:
         title = self.title or 'Untitled'
 
         # ---- hashtags ----
-        tags_html = Text(' '.join('\n' + tag for tag in tags)).get_html() if tags else None
+        tags_html = Text(' '.join(' ' + tag for tag in tags)).get_html() if tags else None
         
         # ---- author ----
         author_html = Text(f'\nAutor: {self.author} \n').get_html() if need_author and self.author else None
@@ -418,7 +418,7 @@ class PostFormatter:
             elif via_type == BARE_LINK_VIA and self.link:
                 via_text = Text(self.link)
             elif via_type == TEXT_LINK_VIA and self.link:
-                via_text = Link('source', param=self.link)
+                via_text = Link('🔗 Link 🔗\n', param=self.link)
             else:
                 via_text = None
             via_html = via_text.get_html() if via_text else None
@@ -463,7 +463,7 @@ class PostFormatter:
             elif via_type == BARE_LINK_VIA and self.link:
                 sourcing_html = self.link
             else:  # NORMAL_MESSAGE
-                sourcing_html = Link('source', param=self.link).get_html() if self.link else None
+                sourcing_html = Link('🔗 Link 🔗\n', param=self.link).get_html() if self.link else None
 
             header = (
                     (feed_title_html or '')
