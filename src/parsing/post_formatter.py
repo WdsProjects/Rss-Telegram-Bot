@@ -95,11 +95,11 @@ class PostFormatter:
         self.__lock = asyncio.Lock()
         self.__post_bucket: dict[
             str,  # option hash
-            Optional[tuple[
+            tuple[
                 str,  # formatted post
                 bool,  # need media
                 bool  # need linkpreview
-            ]]
+            ]
         ] = {}
         self.__param_to_option_cache: dict[
             str,  # param hash
@@ -116,7 +116,7 @@ class PostFormatter:
                                  display_via: int = 0,
                                  display_title: int = 0,
                                  style: int = 0,
-                                 display_media: int = 0) -> Optional[tuple[str, bool, bool]]:
+                                 display_media: int = 0) -> tuple[str, bool, bool]:
         """
         Get formatted post.
 
@@ -239,10 +239,10 @@ class PostFormatter:
             media_msg_count = await self.media.estimate_message_counts() \
                 if (display_media != DISABLE and self.media) else 0
             normal_msg_post = self.generate_formatted_post(sub_title=sub_title,
-                                                           tags=tags,
                                                            title_type=title_type,
                                                            via_type=via_type,
                                                            need_author=need_author,
+                                                           tags=tags,
                                                            message_type=NORMAL_MESSAGE,
                                                            message_style=message_style)
             normal_msg_len = get_plain_text_length(normal_msg_post)
@@ -390,13 +390,13 @@ class PostFormatter:
         #   NORMAL_MESSAGE: source (* text link)
 
         feed_title = sub_title or self.feed_title
-        title = self.title or 'Untitled'
+        title = self.title or 'Sem Título'
 
         # ---- hashtags ----
-        tags_html = Text(' '.join('#' + tag for tag in tags)).get_html() if tags else None
-
+        tags_html = Text(' '.join('' + tag for tag in tags)).get_html() if tags else None
+        
         # ---- author ----
-        author_html = Text(f'(author: {self.author})').get_html() if need_author and self.author else None
+        author_html = Text(f'\nAutor: {self.author} \n\n').get_html() if need_author and self.author else None
 
         if message_style == NORMAL_STYLE:
             # ---- title ----
@@ -418,21 +418,21 @@ class PostFormatter:
             elif via_type == BARE_LINK_VIA and self.link:
                 via_text = Text(self.link)
             elif via_type == TEXT_LINK_VIA and self.link:
-                via_text = Link('source', param=self.link)
+                via_text = Link('\n🔗 Link 🔗', param=self.link)
             else:
                 via_text = None
             via_html = via_text.get_html() if via_text else None
 
             header = (
-                    (title_html or '')
-                    + ('\n' if title_html and tags_html else '')
-                    + (tags_html or '')
+                    (title_html or '\n')
+                    + ('\n' if title_html and author_html else '\n')
             )
 
             footer = (
-                    (via_html or '')
-                    + (' ' if via_html and author_html else '')
-                    + (author_html or '')
+                    (via_html or '\n')
+                    + ('\n' if via_html and tags_html else '\n')
+                    + (author_html or '\n')
+                    + (tags_html or '\n')
             )
 
             return header, footer
@@ -463,20 +463,20 @@ class PostFormatter:
             elif via_type == BARE_LINK_VIA and self.link:
                 sourcing_html = self.link
             else:  # NORMAL_MESSAGE
-                sourcing_html = Link('source', param=self.link).get_html() if self.link else None
+                sourcing_html = Link('\n🔗 Link 🔗', param=self.link).get_html() if self.link else None
 
             header = (
                     (feed_title_html or '')
-                    + ('\n' if feed_title_html and title_html else '')
-                    + (title_html or '')
-                    + ('\n' if (feed_title_html or title_html) and tags_html else '')
-                    + (tags_html or '')
+                    + ('\n' if feed_title_html and title_html else '\n')
+                    + (title_html or '\n')
+                    + ('\n' if (feed_title_html or title_html) and author_html else '\n')
             )
 
             footer = (
-                    (sourcing_html or '')
-                    + ('\n' if sourcing_html and author_html else '')
-                    + (author_html or '')
+                    (sourcing_html or '\n')
+                    + ('\n' if sourcing_html and tags_html else '')
+                    + (author_html or '\n')
+                    + (tags_html or '\n')
             )
 
             return header, footer
@@ -491,18 +491,18 @@ class PostFormatter:
                                 message_type: TypeMessageType,
                                 message_style: TypeMessageStyle) -> str:
         header, footer = self.get_post_header_and_footer(sub_title=sub_title,
-                                                         tags=tags,
                                                          title_type=title_type,
                                                          via_type=via_type,
                                                          need_author=need_author,
+                                                         tags=tags,
                                                          message_type=message_type,
                                                          message_style=message_style)
         content = self.parsed_html if message_type == NORMAL_MESSAGE else ''
         return (
                 header
-                + ('\n\n' if header and content else '')
+                + ('\n' if header and content else '')
                 + content
-                + ('\n\n' if (header or content) and footer else '')
+                + ('\n' if (header or content) and footer else '')
                 + footer
         )
 
